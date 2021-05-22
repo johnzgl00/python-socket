@@ -1,24 +1,25 @@
 import socket
 
-HEADER = 64 # bite message lenght
-PORT = 5050 # set port 
-SERVER = "192.168.68.16"
-ADDR = (SERVER, PORT)
-FORMAT = 'utf-8' # decoder
-DISCONNECT_MESSAGE = "!DISCONNECT" # disconnect message
-
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDR)
+client.connect((socket.gethostname(), 5050))
 
-def sent(msg):
-    message = msg.encode(FORMAT)
-    msg_lenght = len(message)
-    send_lenght = str(msg_lenght).encode(FORMAT)
-    send_lenght += b' ' * (HEADER - len(send_lenght))
-    client.send(send_lenght)
-    client.send(message)
-    print(client.recv(2048).decode(FORMAT))
-
-sent("hello wolrd")
-sent("activate")
-sent(DISCONNECT_MESSAGE)
+while True:    
+    msg = client.recv(9999)
+    final_msg = msg.decode('utf-8')
+    if final_msg == "exit" or final_msg == "break":
+        print(final_msg)
+        break
+    elif final_msg == "writeConf":
+        infoList = []
+        for i in range(4):
+            info = client.recv(9999)
+            final_info = info.decode('utf-8')
+            #print(final_info)
+            infoList.append(final_info)
+            i =+ 1
+        print(infoList)
+        info_to_write = str(infoList)
+        file=open("module.info", "a")
+        file.write(info_to_write)
+        file.close()
+x = input()

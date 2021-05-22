@@ -1,37 +1,49 @@
 import socket
-import threading
+import time
 
-HEADER = 64 # bite message lenght
-PORT = 5050 # set port 
-SERVER = socket.gethostbyname(socket.gethostname()) # get server ip address
-ADDR = (SERVER, PORT)
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Set type to ip
-server.bind(ADDR) # every device goes to ADDR is refearing to this socket (server)
+server.bind((socket.gethostname(), 5050))
 FORMAT = 'utf-8' # decoder
 DISCONNECT_MESSAGE = "!DISCONNECT" # disconnect message
+server.listen(5)
 
-def handle_client(conn, addr):
-    print(f"[NEW CONNECTION] {addr} connected.")
-    connected = True
-    while connected:
-        msg_length = conn.recv(HEADER).decode(FORMAT)
-        if msg_length:
-            msg_length = int(msg_length)
-            msg = conn.recv(msg_length).decode(FORMAT)
-            if msg == DISCONNECT_MESSAGE:
-                connected = False
-            print(f"{addr}: {msg}")
-            conn.send("message received".encode(FORMAT))
-    conn.close()
+print(f"Starting on {(socket.gethostbyname(socket.gethostname()), 5050)}")
 
-def start():
-    server.listen()
-    while True:
-        conn, addr = server.accept()
-        thread = threading.Thread(target=handle_client, args=(conn, addr))
-        thread.start()
-        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() -1}")
+clientsocket, address = server.accept()
+print(f"[NEW CONNECTION:] {address}")
 
-print("[STARTING] Starting server....")
-print(f"[LISTENING] listening on {ADDR}")
-start()
+while True:
+    command = str(input("confithon:>>> "))
+    if command == "exit":
+        clientsocket.send(bytes("exit", "utf-8"))
+        print("Disconnecting...")
+        clientsocket.close()
+    elif command == "break":
+        try:
+            clientsocket.send(bytes("break", "utf-8"))
+        except Exception:
+            pass
+        break
+    elif command == "write conf":
+        clientsocket.send(bytes("writeConf", "utf-8"))
+        name = str(input("NAME: "))
+        version = str(input("VERSION: "))
+        board = str(input("BOARD: "))
+        number = str(input("NUMBER: "))
+        clientsocket.send(bytes(f"NAME: {name}", "utf-8"))
+        time.sleep(1)
+        clientsocket.send(bytes(f"VERSION: {version}", "utf-8"))
+        time.sleep(1)
+        clientsocket.send(bytes(f"BOARD: {board}", "utf-8"))
+        time.sleep(1)
+        clientsocket.send(bytes(f"NUMBER: {number}", "utf-8"))
+        time.sleep(1)
+        print()
+        print("{Configuration Sent}")
+    elif  command == "show options":
+        print("    'exit'       :  used to disconnect")
+        print("    'break'      :  used to stop program")
+        print("'show options'   :  used to show available options")
+
+print("Exiting...")
+time.sleep(2)
